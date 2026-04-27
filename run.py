@@ -1,0 +1,18 @@
+import uvicorn
+import socket
+
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # Não precisa de conexão real, apenas tenta "olhar" para fora
+        s.connect(('8.8.8.8', 1))
+        IP = s.getsockname()[0]
+    except Exception:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
+
+if __name__ == "__main__":
+    print(f"IP do servidor: {get_ip()}")
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
