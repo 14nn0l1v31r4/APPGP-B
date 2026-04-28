@@ -1,0 +1,20 @@
+# Servidor e API
+fastapi
+uvicorn
+python-multipart
+python-dotenv
+
+# Banco de Dados (PostgreSQL)
+sqlalchemy
+psycopg2-binary
+
+# OCR e Processamento de Imagem/PDF
+pytesseract
+Pillow
+pdfplumber
+
+# --- SEGURANÇA E LOGIN ---
+# Para criptografar as senhas no banco
+passlib[bcrypt]
+# Para gerar e validar os tokens JWT
+python-jose[cryptography]

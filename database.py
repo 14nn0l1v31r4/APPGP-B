@@ -7,17 +7,14 @@ from dotenv import load_dotenv
 # Carrega as variáveis de ambiente do ficheiro .env
 load_dotenv()
 
-# Vai buscar o URL da base de dados ao .env. Se não encontrar, usa o SQLite local como plano B.
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./appgp.db")
-
-# O argumento 'check_same_thread' é obrigatório apenas para o SQLite.
-# Se no futuro mudarmos o URL do .env para um PostgreSQL, o Python desativa isso automaticamente.
-connect_args = {"check_same_thread": False} if SQLALCHEMY_DATABASE_URL.startswith("sqlite") else {}
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, 
-    connect_args=connect_args
+# URL do PostgreSQL
+SQLALCHEMY_DATABASE_URL = os.getenv(
+    "DATABASE_URL", 
+    "postgresql://postgres:suasenha@localhost:5432/appgp"
 )
+
+# Cria a conexão
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

@@ -5,9 +5,15 @@ import models, database, os, pytesseract
 # Importamos os nossos Controllers (Routers)
 from routers import pacientes, pagamentos, dashboard, upload, auth
 
-# Configuração Tesseract
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-os.environ['TESSDATA_PREFIX'] = r'C:\Program Files\Tesseract-OCR\tessdata'
+# 🛠️ Correção para o Docker (Linux) vs Computador Local (Windows)
+# Definimos no .env se estamos no Windows, caso contrário, usa o caminho do Linux/Docker
+tesseract_cmd = os.getenv('TESSERACT_CMD', '/usr/bin/tesseract')
+pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
+
+# Opcional: Configurar o TESSDATA_PREFIX apenas se estiver no Windows localmente
+tessdata_prefix = os.getenv('TESSDATA_PREFIX')
+if tessdata_prefix:
+    os.environ['TESSDATA_PREFIX'] = tessdata_prefix
 
 # Cria as tabelas na base de dados
 models.Base.metadata.create_all(bind=database.engine)
@@ -22,7 +28,7 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# 🌟 Registar as Rotas (Ficheiros isolados)
+# 🌟 Registar as Rotas
 app.include_router(auth.router)
 app.include_router(pacientes.router)
 app.include_router(pagamentos.router)
@@ -31,4 +37,4 @@ app.include_router(upload.router)
 
 @app.get("/")
 def home():
-    return {"message": "Backend APPGP - Cérebro Ativado com Arquitetura Limpa! 🧠✨ "}
+    return {"message": "Backend APPGP - Cérebro Ativado com Arquitetura Limpa (PostgreSQL)! 🧠✨ "}
