@@ -1,0 +1,47 @@
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+from app.repositories import pacientes_repository
+from app import schemas
+
+def listar_pacientes(db: Session, usuario_id: int):
+    return pacientes_repository.listar_todos(db, usuario_id)
+
+def criar_paciente(db: Session, paciente: schemas.PacienteCreate, usuario_id: int):
+    # Regra de negócio: Evitar duplicidade
+    existente = pacientes_repository.buscar_por_nome(db, paciente.nome, usuario_id)
+    if existente:
+        return existente
+    
+    # Prepara os dados para o banco
+    dados = paciente.dict()
+    dados["usuario_id"] = usuario_id
+    return pacientes_repository.criar(db, dados)
+
+def atualizar_paciente(db: Session, paciente_id: int, paciente_dados: schemas.PacienteUpdate, usuario_id: int):
+    # Regra de negócio: Só atualiza se existir
+    paciente = pacientes_repository.buscar_por_id(db, paciente_id, usuario_id)
+    if not paciente:
+        raise HTTPException(status_code=404, detail="Paciente não encontrado")
+    
+    paciente.valor_sessao = paciente_dados.valor_sessao
+    pacientes_repository.salvar_alteracoes(db)
+    return paciente
+
+def alternar_status(db: Session, paciente_id: int, status_data: schemas.StatusUpdate, usuario_id: int):
+    p = pacientes_repository.buscar_por_id(db, paciente_id, usuario_id)
+    if not p:
+        raise HTTPException(status_code=404, detail="Paciente não encontrado")
+    
+    p.status = status_data.status
+    p.data_inativo = status_data.data_inativo if p.status == "Inativo" else None
+    pacientes_repository.salvar_alteracoes(db)
+    return {"status": p.status}
+
+def registrar_desmarcada(db: Session, paciente_id: int, info: schemas.DesmarcarSessao, usuario_id: int):
+    p = pacientes_repository.buscar_por_id(db, paciente_id, usuario_id)
+    if not p:
+        raise HTTPException(status_code=404, detail="Acesso negado")
+    
+    dados = {"data_sessao": info.data_sessao, "paciente_id": paciente_id}
+    pacientes_repository.registrar_sessao_desmarcada(db, dados)
+    return {"status": "sucesso"}

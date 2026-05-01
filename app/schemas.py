@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 
 class PacienteCreate(BaseModel):
@@ -27,7 +27,7 @@ class PagamentoCreate(BaseModel):
 class UsuarioCreate(BaseModel):
     nome: str
     email: str
-    senha: str
+    senha: str = Field(..., max_length=50)
 
 class UsuarioResponse(BaseModel):
     id: int

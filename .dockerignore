@@ -1,5 +1,11 @@
-venv/
 __pycache__/
 *.pyc
-appgp.db
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
 .env
+.git/
+.gitignore

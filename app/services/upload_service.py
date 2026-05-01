@@ -1,25 +1,14 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form
-from sqlalchemy.orm import Session
-from typing import Optional
-import models, io, pytesseract, security
+import io, pytesseract, pdfplumber
 from PIL import Image
-import pdfplumber
-from parsers import extrair_os_dados
-from database import get_db
+from sqlalchemy.orm import Session
+from app.repositories import upload_repository
+from app.utils.parsers import extrair_os_dados
 
-router = APIRouter(prefix="/upload-pix", tags=["Upload"])
-
-@router.post("/")
-async def upload_pix(
-    file: UploadFile = File(...), 
-    valor_sessao_manual: Optional[float] = Form(None),
-    db: Session = Depends(get_db),
-    current_user: models.Usuario = Depends(security.get_current_user) # 🔒 Segurança ativada
-):
-    content = await file.read()
+def processar_arquivo_pix(db: Session, content: bytes, filename: str, content_type: str, valor_sessao_manual: float, usuario_id: int):
     texto_extraido = ""
     
-    if file.filename.lower().endswith('.pdf') or file.content_type == 'application/pdf':
+    # 1. Leitura do Arquivo
+    if filename.lower().endswith('.pdf') or content_type == 'application/pdf':
         with pdfplumber.open(io.BytesIO(content)) as pdf:
             for page in pdf.pages:
                 texto_pagina = page.extract_text()
@@ -28,28 +17,31 @@ async def upload_pix(
         img = Image.open(io.BytesIO(content))
         texto_extraido = pytesseract.image_to_string(img, lang='por')
     
+    # 2. Extração via Parsers
     dados_extraidos = extrair_os_dados(texto_extraido)
     
-    dados_extraidos["paciente_id"] = None
-    dados_extraidos["sessoes_pagas"] = 1
-    dados_extraidos["match_status"] = "Paciente não encontrado"
-    dados_extraidos["valor_sessao_sugerido"] = valor_sessao_manual 
+    dados_extraidos.update({
+        "paciente_id": None,
+        "sessoes_pagas": 1,
+        "match_status": "Paciente não encontrado",
+        "valor_sessao_sugerido": valor_sessao_manual
+    })
     
     valor_texto = dados_extraidos.get("valor", "0").replace(".", "").replace(",", ".")
     valor_pix = float(valor_texto) if valor_texto else 0.0
     nome_lido = dados_extraidos.get("pagador", "").strip().upper()
     
+    # 3. Motor de Match
     paciente_encontrado = None
-
     if nome_lido and nome_lido != "NÃO IDENTIFICADO":
-        # 🔒 O Motor de Match só procura nos pacientes desta psicóloga
-        pacientes_cadastrados = db.query(models.Paciente).filter(models.Paciente.usuario_id == current_user.id).all()
+        pacientes_cadastrados = upload_repository.buscar_pacientes_por_usuario(db, usuario_id)
         for p in pacientes_cadastrados:
             nome_db = p.nome.strip().upper()
             if " ".join(nome_lido.split()[:2]) == " ".join(nome_db.split()[:2]):
                 paciente_encontrado = p
                 break 
 
+    # 4. Cálculos Finais
     if paciente_encontrado:
         dados_extraidos["paciente_id"] = paciente_encontrado.id
         dados_extraidos["match_status"] = "Vínculo Automático"
