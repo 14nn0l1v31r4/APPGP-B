@@ -12,18 +12,14 @@ def gerar_relatorio_dashboard(db: Session, mes_nome: str, usuario_id: int):
     mes_num = MESES_NUM.get(mes_nome, "04")
     hoje = datetime.now()
     
-    # Busca dados no repositório
     lancamentos_mes = dashboard_repository.buscar_pagamentos_mes(db, usuario_id, mes_num)
     todos_pacientes, todos_pagamentos = dashboard_repository.buscar_todos_dados_usuario(db, usuario_id)
     
-    # Cálculos do Mês
     total_recebido_mes = sum(p.valor for p in lancamentos_mes)
     total_sessoes_mes = sum(p.sessoes_pagas for p in lancamentos_mes if p.sessoes_pagas)
     
-    # Cálculo de Valor Pendente Global
     valor_pendente_global = 0.0
     for p in todos_pacientes:
-        # Lógica de cálculo de sessões (simplificada para o exemplo)
         try:
             data_inicio = datetime.strptime(p.data_inicio, "%Y-%m-%d")
             data_fim = datetime.strptime(p.data_inativo, "%Y-%m-%d") if (p.status == "Inativo" and p.data_inativo) else hoje

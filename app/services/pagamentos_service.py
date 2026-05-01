@@ -6,7 +6,6 @@ from app.repositories import pagamentos_repository
 def processar_pagamento(db: Session, pg: schemas.PagamentoCreate, usuario_id: int):
     id_final = pg.paciente_id
 
-    # ✨ A MÁGICA
     if not id_final and pg.novo_paciente_nome:
         dados_novo_paciente = {
             "nome": pg.novo_paciente_nome,

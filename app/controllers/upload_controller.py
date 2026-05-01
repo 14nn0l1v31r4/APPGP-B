@@ -15,7 +15,6 @@ async def upload_pix(
     db: Session = Depends(get_db),
     current_user: models.Usuario = Depends(security.get_current_user)
 ):
-    # Lemos os bytes aqui na rota async e passamos pro Service trabalhar
     content = await file.read()
     
     return upload_service.processar_arquivo_pix(

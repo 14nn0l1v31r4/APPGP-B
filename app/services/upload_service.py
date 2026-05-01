@@ -7,7 +7,6 @@ from app.utils.parsers import extrair_os_dados
 def processar_arquivo_pix(db: Session, content: bytes, filename: str, content_type: str, valor_sessao_manual: float, usuario_id: int):
     texto_extraido = ""
     
-    # 1. Leitura do Arquivo
     if filename.lower().endswith('.pdf') or content_type == 'application/pdf':
         with pdfplumber.open(io.BytesIO(content)) as pdf:
             for page in pdf.pages:
@@ -17,7 +16,6 @@ def processar_arquivo_pix(db: Session, content: bytes, filename: str, content_ty
         img = Image.open(io.BytesIO(content))
         texto_extraido = pytesseract.image_to_string(img, lang='por')
     
-    # 2. Extração via Parsers
     dados_extraidos = extrair_os_dados(texto_extraido)
     
     dados_extraidos.update({
@@ -31,7 +29,6 @@ def processar_arquivo_pix(db: Session, content: bytes, filename: str, content_ty
     valor_pix = float(valor_texto) if valor_texto else 0.0
     nome_lido = dados_extraidos.get("pagador", "").strip().upper()
     
-    # 3. Motor de Match
     paciente_encontrado = None
     if nome_lido and nome_lido != "NÃO IDENTIFICADO":
         pacientes_cadastrados = upload_repository.buscar_pacientes_por_usuario(db, usuario_id)
@@ -41,7 +38,6 @@ def processar_arquivo_pix(db: Session, content: bytes, filename: str, content_ty
                 paciente_encontrado = p
                 break 
 
-    # 4. Cálculos Finais
     if paciente_encontrado:
         dados_extraidos["paciente_id"] = paciente_encontrado.id
         dados_extraidos["match_status"] = "Vínculo Automático"

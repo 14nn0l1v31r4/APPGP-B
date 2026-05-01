@@ -7,18 +7,15 @@ def listar_pacientes(db: Session, usuario_id: int):
     return pacientes_repository.listar_todos(db, usuario_id)
 
 def criar_paciente(db: Session, paciente: schemas.PacienteCreate, usuario_id: int):
-    # Regra de negócio: Evitar duplicidade
     existente = pacientes_repository.buscar_por_nome(db, paciente.nome, usuario_id)
     if existente:
         return existente
     
-    # Prepara os dados para o banco
     dados = paciente.dict()
     dados["usuario_id"] = usuario_id
     return pacientes_repository.criar(db, dados)
 
 def atualizar_paciente(db: Session, paciente_id: int, paciente_dados: schemas.PacienteUpdate, usuario_id: int):
-    # Regra de negócio: Só atualiza se existir
     paciente = pacientes_repository.buscar_por_id(db, paciente_id, usuario_id)
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")

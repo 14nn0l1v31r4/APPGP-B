@@ -17,7 +17,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# 🌟 Onde o frontend vai buscar o token (o nosso endpoint de login)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 def gerar_hash_senha(senha: str):
@@ -32,7 +31,6 @@ def criar_token_acesso(dados: dict):
     a_codificar.update({"exp": expiracao})
     return jwt.encode(a_codificar, SECRET_KEY, algorithm=ALGORITHM)
 
-# 🌟 O "Segurança" da nossa porta: Lẽ o token e devolve o utilizador logado
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

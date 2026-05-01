@@ -25,6 +25,10 @@ services:
       - TESSERACT_CMD=/usr/bin/tesseract
     depends_on:
       - db
+    deploy:
+      resources:
+        limits:
+          memory: 300M
 
 volumes:
   postgres_data:

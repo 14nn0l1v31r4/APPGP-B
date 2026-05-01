@@ -16,5 +16,4 @@ def registrar_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_
 
 @router.post("/login", response_model=schemas.Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    # O form_data.username mapeia para o nosso email
     return auth_service.autenticar_usuario(db, form_data.username, form_data.password)
