@@ -27,3 +27,27 @@ def alternar_status_paciente(paciente_id: int, status_data: schemas.StatusUpdate
 @router.post("/{paciente_id}/desmarcar")
 def registrar_sessao_desmarcada(paciente_id: int, info: schemas.DesmarcarSessao, db: Session = Depends(get_db), current_user: models.Usuario = Depends(security.get_current_user)):
     return pacientes_service.registrar_desmarcada(db, paciente_id, info, current_user.id)
+
+
+@router.get("/desmarcadas")
+def listar_sessoes_desmarcadas(
+    db: Session = Depends(get_db), 
+    current_user: models.Usuario = Depends(security.get_current_user)
+):
+    desmarcadas = (
+        db.query(models.SessaoDesmarcada)
+        .join(models.Paciente)
+        .filter(models.Paciente.usuario_id == current_user.id)
+        .order_by(models.SessaoDesmarcada.data_sessao.desc())
+        .all()
+    )
+    resultado = []
+    for d in desmarcadas:
+        resultado.append({
+            "id": d.id,
+            "paciente_id": d.paciente_id,
+            "paciente_nome": d.paciente.nome,
+            "data_sessao": d.data_sessao
+        })
+        
+    return resultado
