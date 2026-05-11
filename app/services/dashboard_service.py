@@ -2,6 +2,11 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from app.repositories import dashboard_repository
 
+MESES_LISTA = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+]
+
 MESES_NUM = {
     "Janeiro": "01", "Fevereiro": "02", "Março": "03", "Abril": "04",
     "Maio": "05", "Junho": "06", "Julho": "07", "Agosto": "08",
@@ -9,8 +14,13 @@ MESES_NUM = {
 }
 
 def gerar_relatorio_dashboard(db: Session, mes_nome: str, usuario_id: int):
-    mes_num = MESES_NUM.get(mes_nome, "04")
     hoje = datetime.now()
+    
+    if not mes_nome:
+        mes_atual_index = hoje.month 
+        mes_nome = MESES_LISTA[mes_atual_index]
+
+    mes_num = MESES_NUM.get(mes_nome, hoje.strftime("%m"))
     
     lancamentos_mes = dashboard_repository.buscar_pagamentos_mes(db, usuario_id, mes_num)
     todos_pacientes, todos_pagamentos = dashboard_repository.buscar_todos_dados_usuario(db, usuario_id)
@@ -19,6 +29,9 @@ def gerar_relatorio_dashboard(db: Session, mes_nome: str, usuario_id: int):
     total_sessoes_mes = sum(p.sessoes_pagas for p in lancamentos_mes if p.sessoes_pagas)
     
     valor_pendente_global = 0.0
+    sessoes_pendentes_globais = 0 
+    pacientes_devedores = []      
+    
     for p in todos_pacientes:
         try:
             data_inicio = datetime.strptime(p.data_inicio, "%Y-%m-%d")
@@ -31,17 +44,31 @@ def gerar_relatorio_dashboard(db: Session, mes_nome: str, usuario_id: int):
             sessoes_desmarcadas = dashboard_repository.contar_desmarcadas_por_paciente(db, p.id)
             
             sessoes_devidas = sessoes_esperadas - sessoes_pagas - sessoes_desmarcadas
+            
             if sessoes_devidas > 0:
-                valor_pendente_global += (sessoes_devidas * p.valor_sessao)
+                valor_devido_paciente = sessoes_devidas * p.valor_sessao
+                
+                valor_pendente_global += valor_devido_paciente
+                sessoes_pendentes_globais += sessoes_devidas
+                
+                pacientes_devedores.append({
+                    "id": p.id,
+                    "nome": p.nome,
+                    "sessoes_pendentes": sessoes_devidas,
+                    "valor_pendente": valor_devido_paciente
+                })
         except:
             continue
+
+    pacientes_devedores.sort(key=lambda x: x["valor_pendente"], reverse=True)
 
     return {
         "estatisticas": {
             "recebido": f"{total_recebido_mes:,.2f}".replace('.', ','),
             "pendente": f"{valor_pendente_global:,.2f}".replace('.', ','),
             "sessoesPagas": total_sessoes_mes,
-            "sessoesPendentes": 0
+            "sessoesPendentes": sessoes_pendentes_globais 
         },
-        "lancamentos": lancamentos_mes
+        "lancamentos": lancamentos_mes,
+        "devedores": pacientes_devedores 
     }

@@ -8,5 +8,6 @@ from app.services import dashboard_service
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
 @router.get("/")
-def get_dashboard(mes: str = "Abril", db: Session = Depends(get_db), current_user: models.Usuario = Depends(security.get_current_user)):
+def get_dashboard(mes: str = None, db: Session = Depends(get_db), current_user: models.Usuario = Depends(security.get_current_user)):
+    
     return dashboard_service.gerar_relatorio_dashboard(db, mes, current_user.id)
