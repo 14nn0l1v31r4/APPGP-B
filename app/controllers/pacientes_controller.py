@@ -34,20 +34,21 @@ def listar_sessoes_desmarcadas(
     db: Session = Depends(get_db), 
     current_user: models.Usuario = Depends(security.get_current_user)
 ):
-    desmarcadas = (
-        db.query(models.SessaoDesmarcada)
-        .join(models.Paciente)
-        .filter(models.Paciente.usuario_id == current_user.id)
-        .order_by(models.SessaoDesmarcada.data_sessao.desc())
-        .all()
-    )
-    resultado = []
-    for d in desmarcadas:
-        resultado.append({
-            "id": d.id,
-            "paciente_id": d.paciente_id,
-            "paciente_nome": d.paciente.nome,
-            "data_sessao": d.data_sessao
-        })
-        
-    return resultado
+    return pacientes_service.listar_sessoes_desmarcadas(db, current_user.id)
+
+@router.put("/desmarcadas/{desmarcada_id}")
+def atualizar_sessao_desmarcada(
+    desmarcada_id: int, 
+    dados: schemas.SessaoDesmarcadaUpdate, 
+    db: Session = Depends(get_db), 
+    current_user: models.Usuario = Depends(security.get_current_user)
+):
+    return pacientes_service.atualizar_sessao_desmarcada(db, desmarcada_id, dados, current_user.id)
+
+@router.delete("/desmarcadas/{desmarcada_id}")
+def excluir_sessao_desmarcada(
+    desmarcada_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: models.Usuario = Depends(security.get_current_user)
+):
+    return pacientes_service.excluir_sessao_desmarcada(db, desmarcada_id, current_user.id)

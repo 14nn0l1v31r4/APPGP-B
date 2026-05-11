@@ -40,3 +40,6 @@ class UsuarioResponse(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class SessaoDesmarcadaUpdate(BaseModel):
+    data_sessao: str

@@ -37,3 +37,4 @@ def remover_pagamento(db: Session, pagamento_id: int, usuario_id: int):
     
     pagamentos_repository.deletar(db, pg)
     return {"status": "excluído"}
+

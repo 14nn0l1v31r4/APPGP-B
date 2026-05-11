@@ -32,3 +32,22 @@ def registrar_sessao_desmarcada(db: Session, dados_desmarcada: dict):
     db.add(nova_desmarcada)
     db.commit()
     return nova_desmarcada
+
+def listar_desmarcadas(db: Session, usuario_id: int):
+    return (
+        db.query(models.SessaoDesmarcada)
+        .join(models.Paciente)
+        .filter(models.Paciente.usuario_id == usuario_id)
+        .order_by(models.SessaoDesmarcada.data_sessao.desc())
+        .all()
+    )   
+
+def buscar_desmarcada_por_id(db: Session, desmarcada_id: int, usuario_id: int):
+    return db.query(models.SessaoDesmarcada).join(models.Paciente).filter(
+        models.SessaoDesmarcada.id == desmarcada_id,
+        models.Paciente.usuario_id == usuario_id
+    ).first()
+
+def excluir_desmarcada(db: Session, sessao: models.SessaoDesmarcada):
+    db.delete(sessao)
+    db.commit()

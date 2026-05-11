@@ -42,3 +42,33 @@ def registrar_desmarcada(db: Session, paciente_id: int, info: schemas.DesmarcarS
     dados = {"data_sessao": info.data_sessao, "paciente_id": paciente_id}
     pacientes_repository.registrar_sessao_desmarcada(db, dados)
     return {"status": "sucesso"}
+
+def listar_sessoes_desmarcadas(db: Session, usuario_id: int):
+    desmarcadas = pacientes_repository.listar_desmarcadas(db, usuario_id)
+    
+    resultado = []
+    for d in desmarcadas:
+        resultado.append({
+            "id": d.id,
+            "paciente_id": d.paciente_id,
+            "paciente_nome": d.paciente.nome,
+            "data_sessao": d.data_sessao
+        })
+    return resultado
+
+def atualizar_sessao_desmarcada(db: Session, desmarcada_id: int, dados: schemas.SessaoDesmarcadaUpdate, usuario_id: int):
+    sessao = pacientes_repository.buscar_desmarcada_por_id(db, desmarcada_id, usuario_id)
+    if not sessao:
+        raise HTTPException(status_code=404, detail="Sessão não encontrada ou acesso negado.")
+    
+    sessao.data_sessao = dados.data_sessao
+    pacientes_repository.salvar_alteracoes(db)
+    return {"mensagem": "Data atualizada com sucesso!"}
+
+def excluir_sessao_desmarcada(db: Session, desmarcada_id: int, usuario_id: int):
+    sessao = pacientes_repository.buscar_desmarcada_por_id(db, desmarcada_id, usuario_id)
+    if not sessao:
+        raise HTTPException(status_code=404, detail="Sessão não encontrada ou acesso negado.")
+    
+    pacientes_repository.excluir_desmarcada(db, sessao)
+    return {"mensagem": "Sessão excluída com sucesso!"} 
