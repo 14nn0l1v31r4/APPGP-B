@@ -12,6 +12,9 @@ def extrair_os_dados(arquivo):
     banco = "Desconhecido"
     texto_lower = texto.lower()
     
+    # Adicione esta linha mágica aqui:
+    print(f"👀 TEXTO LIDO PELO OCR: {texto_lower}")
+    
     if "alô caixa" in texto_lower or "sac caixa" in texto_lower:
         banco = "Caixa"
     elif "santander" in texto_lower or "4004-3535" in texto_lower:
