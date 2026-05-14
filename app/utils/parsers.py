@@ -86,10 +86,14 @@ def extrair_os_dados(arquivo):
         if nome_m:
             dados["pagador"] = nome_m.group(1).strip().upper()
         else:
-            # Fallback para quando o OCR fica cego e lê apenas "origem nome rute instituição"
-            nome_fallback = re.search(r'nome\s+([a-zà-ÿ\s]+?)(?:\s+institui|\s+cpf|\s+cnpj|\]|\d|$)', texto_lower)
-            if nome_fallback:
-                dados["pagador"] = nome_fallback.group(1).strip().upper()
+            # Fallback para quando o OCR fica cego e lê lixo como "instituição ] men"
+            # Cortamos a string na palavra 'origem', que sempre precede o nome do pagador
+            if "origem" in texto_lower:
+                bloco_origem = texto_lower.split("origem")[-1]
+                # Pegamos o que vem depois de 'nome ' até bater na primeira letra 'i' de instituição ou similar
+                nome_fallback = re.search(r'nome\s+([a-zà-ÿ\s]+?)\s*(?:institui|cpf|cnpj|ag[eê]ncia|conta|\])', bloco_origem)
+                if nome_fallback:
+                    dados["pagador"] = nome_fallback.group(1).strip().upper()
 
     elif banco == "Banco do Brasil":
         valor_m = re.search(r'R\$\s*([\d\.,]+)', texto, re.IGNORECASE)
