@@ -14,7 +14,7 @@ def extrair_os_dados(arquivo):
     
     if "alô caixa" in texto_lower or "sac caixa" in texto_lower:
         banco = "Caixa"
-    elif "atendimento santander" in texto_lower or "4004-3535" in texto_lower:
+    elif "santander" in texto_lower or "4004-3535" in texto_lower:
         banco = "Santander"
     elif "nubank" in texto_lower or "nu pagamentos s.a" in texto_lower:
         banco = "Nubank"
