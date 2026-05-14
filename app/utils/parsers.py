@@ -114,10 +114,18 @@ def extrair_os_dados(arquivo):
         if data_m: 
             dados["data"] = data_m.group(1)
             
-        # ✨ Limpeza da exigência de CPF no Santander
-        nome_m = re.search(r'dados do pagador\s+de\s+(.*?)(?:\s+cpf|\s+cnpj|\d|$)', texto, re.IGNORECASE)
-        if nome_m:
-            dados["pagador"] = nome_m.group(1).replace(':', '').strip().upper()
+        # ✨ Estratégia de Fatiamento para o Santander
+        if "pagador" in texto_lower:
+            bloco_santander = texto_lower.split("pagador")[-1]
+            # Pega o que vem logo depois, ignorando "nome" ou "de"
+            nome_m = re.search(r'(?:nome|de)?[:\s]*([a-zà-ÿ\s]+?)(?:\s+cpf|\s+cnpj|\s+institui|\s+banco|\d|$)', bloco_santander)
+            if nome_m:
+                dados["pagador"] = nome_m.group(1).replace(':', '').strip().upper()
+        else:
+            # Fallback (Plano B) caso a palavra 'pagador' não apareça
+            nome_m = re.search(r'(?:nome|de)[:\s]+([a-zà-ÿ\s]+?)(?:\s+cpf|\s+cnpj|\d|$)', texto_lower)
+            if nome_m:
+                dados["pagador"] = nome_m.group(1).replace(':', '').strip().upper()
     
     elif banco == "Itaú":
         valor_m = re.search(r'R\$\s*([\d\.,]+)', texto, re.IGNORECASE)
