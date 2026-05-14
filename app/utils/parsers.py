@@ -118,21 +118,19 @@ def extrair_os_dados(arquivo):
         if data_m: 
             dados["data"] = data_m.group(1)
             
-        # 2. Extração do Nome (Método Blindado)
-        # Limpamos todas as quebras de linha e múltiplos espaços para transformar tudo numa linha só
-        texto_limpo = " ".join(texto.split())
-        
-        # Procuramos as palavras-chave do Santander e pegamos o texto até bater no CPF, Banco ou Agência
-        nome_m = re.search(r'(?:nome do pagador|dados do pagador|pagador|nome|origem|de)[\s:]+([A-Za-zÀ-ÿ\s]+?)(?:\s+cpf|\s+cnpj|\s+institui|\s+banco|\s+ag[êe]ncia|\d|$)', texto_limpo, re.IGNORECASE)
-        
-        if nome_m:
-            nome_bruto = nome_m.group(1).replace(':', '').strip().upper()
+        # ✨ 2. Extração do Nome (Fatiamento a Laser)
+        bloco_pagador = ""
+        # Procuramos o bloco exato e cortamos tudo o que vem antes!
+        if "pagador" in texto_lower:
+            bloco_pagador = texto_lower.split("pagador")[-1]
+        elif "origem" in texto_lower:
+            bloco_pagador = texto_lower.split("origem")[-1]
             
-            # Se o Regex capturou um "DE " solto no início (ex: "DE RENATO"), nós removemos
-            if nome_bruto.startswith('DE '):
-                nome_bruto = nome_bruto[3:].strip()
-                
-            dados["pagador"] = nome_bruto
+        if bloco_pagador:
+            # O símbolo ^ garante que a leitura comece imediatamente após o corte
+            nome_m = re.search(r'^[\s:]+(?:nome\s+|de\s+)?([a-zà-ÿ\s]+?)(?:\s+cpf|\s+cnpj|\s+institui|\s+banco|\s+ag[êe]ncia|\d|$)', bloco_pagador)
+            if nome_m:
+                dados["pagador"] = nome_m.group(1).replace(':', '').strip().upper()
     
     elif banco == "Itaú":
         valor_m = re.search(r'R\$\s*([\d\.,]+)', texto, re.IGNORECASE)
