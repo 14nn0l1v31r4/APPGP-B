@@ -62,7 +62,35 @@ def extrair_os_dados(arquivo):
         if valor_m: dados["valor"] = valor_m.group(1)
         if nome_m: dados["pagador"] = nome_m.group(1).strip().upper()
 
-    
+    elif banco == "Nubank":
+        # 1. Extração de Valor (Blindado para "valor r$" ou "r$")
+        valor_m = re.search(r'(?:valor\s+r\$|r\$|rs|r\s\$)\s*([\d\.,]+)', texto_lower)
+        if valor_m: 
+            dados["valor"] = valor_m.group(1)
+            
+        # 2. Extração da Data (Plano A: Leitura Normal / Plano B: Hackear ID do Pix)
+        data_m = re.search(r'(\d{2})\s+([a-zA-Z]{3})\s+(\d{4})', texto)
+        if data_m: 
+            dia, mes_texto, ano = data_m.groups()
+            mes_numero = MESES_ABREVIADOS.get(mes_texto.upper(), mes_texto.upper())
+            dados["data"] = f"{dia}/{mes_numero}/{ano}"
+        elif dados["id_transacao"]:
+            match_data_id = re.search(r'(20[2-3]\d)(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])', dados["id_transacao"])
+            if match_data_id:
+                ano, mes, dia = match_data_id.groups()
+                dados["data"] = f"{dia}/{mes}/{ano}"
+                
+        # 3. Extração do Nome (Plano A: Completo / Plano B: Fatiamento a Laser)
+        nome_m = re.search(r'(?:conta corrente|conta poupan[çc]a|conta de pagamento)\s+([A-Za-zÀ-ÿ\s]+?)\s+nu\s+pagamentos', texto, re.IGNORECASE)
+        if nome_m:
+            dados["pagador"] = nome_m.group(1).strip().upper()
+        else:
+            # O freio perfeito que encontrou o nome da Rute!
+            if "origem" in texto_lower:
+                bloco_origem = texto_lower.split("origem")[-1]
+                nome_fallback = re.search(r'nome\s+([a-zà-ÿ\s]+?)\s*(?:institui|cpf|cnpj|ag[eê]ncia|conta|\])', bloco_origem)
+                if nome_fallback:
+                    dados["pagador"] = nome_fallback.group(1).strip().upper()
 
     elif banco == "Banco do Brasil":
         valor_m = re.search(r'R\$\s*([\d\.,]+)', texto, re.IGNORECASE)
