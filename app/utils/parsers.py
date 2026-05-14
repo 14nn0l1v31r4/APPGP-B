@@ -81,16 +81,17 @@ def extrair_os_dados(arquivo):
                 dados["data"] = f"{dia}/{mes}/{ano}"
                 
         # 3. Extração do Nome (Plano A: Completo / Plano B: Fatiamento a Laser)
-        nome_m = re.search(r'(?:conta corrente|conta poupan[çc]a|conta de pagamento)\s+([A-Za-zÀ-ÿ\s]+?)\s+nu\s+pagamentos', texto, re.IGNORECASE)
-        if nome_m:
-            dados["pagador"] = nome_m.group(1).strip().upper()
+        if "origem" in texto_lower:
+            bloco_origem = texto_lower.split("origem")[-1]
+            # O Regex ignora a palavra "nome" e captura até bater em "instituição" ou afins
+            nome_m = re.search(r'^[\s:]*(?:nome\s+)?([a-zà-ÿ\s]+?)(?:\s+institui|\s+cpf|\s+cnpj|\]|\-|\d|$)', bloco_origem)
+            if nome_m:
+                dados["pagador"] = nome_m.group(1).replace(':', '').strip().upper()
         else:
-            # O freio perfeito que encontrou o nome da Rute!
-            if "origem" in texto_lower:
-                bloco_origem = texto_lower.split("origem")[-1]
-                nome_fallback = re.search(r'nome\s+([a-zà-ÿ\s]+?)\s*(?:institui|cpf|cnpj|ag[eê]ncia|conta|\])', bloco_origem)
-                if nome_fallback:
-                    dados["pagador"] = nome_fallback.group(1).strip().upper()
+            # Fallback apenas para layouts muito antigos do Nubank
+            nome_fallback = re.search(r'(?:conta corrente|conta poupan[çc]a|conta de pagamento)\s+([A-Za-zÀ-ÿ\s]+?)\s+nu\s+pagamentos', texto, re.IGNORECASE)
+            if nome_fallback:
+                dados["pagador"] = nome_fallback.group(1).strip().upper()
 
     elif banco == "Banco do Brasil":
         valor_m = re.search(r'R\$\s*([\d\.,]+)', texto, re.IGNORECASE)
