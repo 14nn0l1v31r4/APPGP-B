@@ -2,6 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from app.repositories import pacientes_repository
 from app import schemas
+from app.models import Pagamento
 
 def listar_pacientes(db: Session, usuario_id: int):
     return pacientes_repository.listar_todos(db, usuario_id)
@@ -72,3 +73,25 @@ def excluir_sessao_desmarcada(db: Session, desmarcada_id: int, usuario_id: int):
     
     pacientes_repository.excluir_desmarcada(db, sessao)
     return {"mensagem": "Sessão excluída com sucesso!"} 
+
+def resumo_mensal(db: Session, paciente_id: int, mes: str, usuario_id: int):
+    # 1. Verifica se o paciente existe e pertence a esta psicóloga
+    p = pacientes_repository.buscar_por_id(db, paciente_id, usuario_id)
+    if not p:
+        raise HTTPException(status_code=404, detail="Paciente não encontrado")
+    
+    # 2. Busca todos os pagamentos deste paciente filtrando pelo mês (ex: "/06/")
+    pagamentos = db.query(Pagamento).filter(
+        Pagamento.paciente_id == paciente_id,
+        Pagamento.data_hora.contains(f"/{mes}/")
+    ).all()
+    
+    # 3. Faz a matemática
+    total_sessoes = sum(pg.sessoes_pagas for pg in pagamentos if pg.sessoes_pagas)
+    total_valor = sum(pg.valor for pg in pagamentos)
+    
+    return {
+        "total_sessoes_pagas": total_sessoes,
+        "total_valor_pago": total_valor,
+        "pagamentos": [{"data": pg.data_hora, "valor": pg.valor, "sessoes": pg.sessoes_pagas} for pg in pagamentos]
+    }
