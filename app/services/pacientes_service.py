@@ -74,19 +74,18 @@ def excluir_sessao_desmarcada(db: Session, desmarcada_id: int, usuario_id: int):
     pacientes_repository.excluir_desmarcada(db, sessao)
     return {"mensagem": "Sessão excluída com sucesso!"} 
 
-def resumo_mensal(db: Session, paciente_id: int, mes: str, usuario_id: int):
+def resumo_mensal(db: Session, paciente_id: int, usuario_id: int): # Removeu o parâmetro 'mes'
     # 1. Verifica se o paciente existe e pertence a esta psicóloga
     p = pacientes_repository.buscar_por_id(db, paciente_id, usuario_id)
     if not p:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
     
-    # 2. Busca todos os pagamentos deste paciente filtrando pelo mês (ex: "/06/")
+    # 2. Busca TODOS os pagamentos históricos deste paciente, ordenando pelos mais recentes
     pagamentos = db.query(Pagamento).filter(
-        Pagamento.paciente_id == paciente_id,
-        Pagamento.data_hora.contains(f"/{mes}/")
-    ).all()
+        Pagamento.paciente_id == paciente_id
+    ).order_by(Pagamento.id.desc()).all()
     
-    # 3. Faz a matemática
+    # 3. Faz a matemática acumulada de todo o histórico
     total_sessoes = sum(pg.sessoes_pagas for pg in pagamentos if pg.sessoes_pagas)
     total_valor = sum(pg.valor for pg in pagamentos)
     

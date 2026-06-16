@@ -31,11 +31,11 @@ def registrar_sessao_desmarcada(paciente_id: int, info: schemas.DesmarcarSessao,
 @router.get("/{paciente_id}/resumo")
 def resumo_paciente(
     paciente_id: int, 
-    mes: str, 
     db: Session = Depends(get_db), 
     current_user: models.Usuario = Depends(security.get_current_user)
 ):
-    return pacientes_service.resumo_mensal(db, paciente_id, mes, current_user.id)
+    
+    return pacientes_service.resumo_mensal(db, paciente_id, current_user.id)
 
 @router.get("/desmarcadas")
 def listar_sessoes_desmarcadas(
