@@ -11,6 +11,10 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - TESSERACT_CMD=/usr/bin/tesseract
+
+    networks:
+      - database_network
+      
     deploy:
       resources:
         limits:
