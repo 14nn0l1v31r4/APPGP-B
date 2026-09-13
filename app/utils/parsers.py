@@ -83,6 +83,8 @@ def extrair_os_dados(arquivo):
         # 3. Extração do Nome (Plano A: Completo / Plano B: Fatiamento a Laser)
         if "origem" in texto_lower:
             bloco_origem = texto_lower.split("origem")[-1]
+            # O Regex ignora a palavra "nome" e captura até bater em "instituição" ou afins
+            nome_m = re.search(r'^[\s:]*(?:nome\s+)?([a-zà-ÿ\s]+?)(?:\s+institui|\s+cpf|\s+cnpj|\]|\-|\d|$)', bloco_origem)
             # O Regex ignora a palavra "nome" (com ou sem dois-pontos) e captura até bater em "instituição" ou afins
             nome_m = re.search(r'^[\s:]*(?:nome[\s:]+)?([a-zà-ÿ\s]+?)(?:\s+institui|\s+cpf|\s+cnpj|\]|\-|\d|$)', bloco_origem)
             if nome_m:

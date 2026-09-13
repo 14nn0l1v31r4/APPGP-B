@@ -59,3 +59,4 @@ def test_upload_service_vinculo_automatico(db_session, test_user):
         assert resultado["paciente_id"] == paciente.id
         assert resultado["sessoes_pagas"] == 2
         assert resultado["valor"] == "320,00"
+

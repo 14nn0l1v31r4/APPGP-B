@@ -44,3 +44,4 @@ def test_dashboard_mes_atual_corresponde_ao_mes_correto(db_session, test_user):
         
         assert relatorio["estatisticas"]["recebido"] == "250,00"
         assert relatorio["estatisticas"]["sessoesPagas"] == 2
+

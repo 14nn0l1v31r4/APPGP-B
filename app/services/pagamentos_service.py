@@ -2,6 +2,7 @@ from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from app import schemas
+from app.repositories import pagamentos_repository
 from app.repositories import pagamentos_repository, pacientes_repository
 
 def registrar_pagamento_rapido(db: Session, dados: schemas.PagamentoRapidoCreate, usuario_id: int):
@@ -40,6 +41,8 @@ def processar_pagamento(db: Session, pg: schemas.PagamentoCreate, usuario_id: in
         valor_sessao = pg.valor_sessao_manual if pg.valor_sessao_manual is not None else pg.valor
         dados_novo_paciente = {
             "nome": pg.novo_paciente_nome,
+            "valor_sessao": pg.valor_sessao_manual,
+            "data_inicio": pg.data_inicio_manual,
             "valor_sessao": valor_sessao,
             "data_inicio": data_inicio,
             "usuario_id": usuario_id,
@@ -53,6 +56,8 @@ def processar_pagamento(db: Session, pg: schemas.PagamentoCreate, usuario_id: in
     dados_pagamento = {
         "paciente_id": id_final,
         "valor": pg.valor,
+        "data_hora": pg.data_hora,
+        "sessoes_pagas": pg.sessoes_pagas,
         "data_hora": data_hora_final,
         "sessoes_pagas": pg.sessoes_pagas if pg.sessoes_pagas > 0 else 1,
         "pagador": pg.pagador,

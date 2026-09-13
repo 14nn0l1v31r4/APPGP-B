@@ -20,6 +20,7 @@ class PagamentoCreate(BaseModel):
     pagador: str
     valor: float
     data_hora: str
+    sessoes_pagas: int = 0                
     sessoes_pagas: int = 1                
     paciente_id: Optional[int] = None    
     id_transacao: Optional[str] = None

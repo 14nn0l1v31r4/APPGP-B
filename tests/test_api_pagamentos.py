@@ -64,3 +64,4 @@ def test_api_post_pagamento_manual_com_novo_paciente(client, db_session, test_us
     assert pacientes_resp.status_code == 200
     nomes = [p["nome"] for p in pacientes_resp.json()]
     assert "Roberto Carlos" in nomes
+

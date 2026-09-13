@@ -101,3 +101,4 @@ def test_pagamento_com_criacao_novo_paciente(db_session, test_user):
     assert pg is not None
     assert pg.valor == 180.0
     assert pg.sessoes_pagas == 1
+
