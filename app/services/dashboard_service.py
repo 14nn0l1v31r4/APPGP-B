@@ -17,7 +17,7 @@ def gerar_relatorio_dashboard(db: Session, mes_nome: str, usuario_id: int):
     hoje = datetime.now()
     
     if not mes_nome:
-        mes_atual_index = hoje.month 
+        mes_atual_index = hoje.month - 1
         mes_nome = MESES_LISTA[mes_atual_index]
 
     mes_num = MESES_NUM.get(mes_nome, hoje.strftime("%m"))
