@@ -1,13 +1,15 @@
-from pydantic import BaseModel, Field
+from datetime import datetime
+from decimal import Decimal
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 
 class PacienteCreate(BaseModel):
     nome: str
-    valor_sessao: float
+    valor_sessao: Decimal = Field(..., gt=0)
     data_inicio: str
 
 class PacienteUpdate(BaseModel):
-    valor_sessao: float
+    valor_sessao: Decimal = Field(..., gt=0)
 
 class StatusUpdate(BaseModel):
     status: str
@@ -17,21 +19,22 @@ class DesmarcarSessao(BaseModel):
     data_sessao: str
 
 class PagamentoCreate(BaseModel):
-    pagador: str
-    valor: float
-    data_hora: str
-    sessoes_pagas: int = 0                
-    sessoes_pagas: int = 1                
+    sessoes_pagas: int = Field(default=1, ge=1)
+    pagador: str = Field(..., min_length=1)
+    valor: Decimal = Field(..., gt=0)
+    data_hora: str | datetime = Field(...)
     paciente_id: Optional[int] = None    
     id_transacao: Optional[str] = None
+    idempotencia_chave: Optional[str] = None
     novo_paciente_nome: Optional[str] = None
-    valor_sessao_manual: Optional[float] = None
+    valor_sessao_manual: Optional[Decimal] = Field(default=None, gt=0)
     data_inicio_manual: Optional[str] = None
 
 class PagamentoRapidoCreate(BaseModel):
     paciente_id: int
-    sessoes_pagas: int = 1
-    data_hora: Optional[str] = None
+    sessoes_pagas: int = Field(default=1, ge=1)
+    data_hora: Optional[str | datetime] = None
+    idempotencia_chave: Optional[str] = None
 
 class UsuarioCreate(BaseModel):
     nome: str
@@ -43,8 +46,7 @@ class UsuarioResponse(BaseModel):
     nome: str
     email: str
 
-    class Config:
-        from_attributes = True  # Permite ler dados direto do banco SQLAlchemy
+    model_config = ConfigDict(from_attributes=True)
 
 class Token(BaseModel):
     access_token: str

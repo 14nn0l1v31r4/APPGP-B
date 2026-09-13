@@ -1,6 +1,10 @@
+import logging
 from datetime import datetime
 from sqlalchemy.orm import Session
 from app.repositories import dashboard_repository
+
+
+logger = logging.getLogger(__name__)
 
 MESES_LISTA = [
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
@@ -17,13 +21,14 @@ def gerar_relatorio_dashboard(db: Session, mes_nome: str, usuario_id: int):
     hoje = datetime.now()
     
     if not mes_nome:
-        mes_atual_index = hoje.month 
         mes_atual_index = hoje.month - 1
         mes_nome = MESES_LISTA[mes_atual_index]
 
     mes_num = MESES_NUM.get(mes_nome, hoje.strftime("%m"))
     
-    lancamentos_mes = dashboard_repository.buscar_pagamentos_mes(db, usuario_id, mes_num)
+    lancamentos_mes = dashboard_repository.buscar_pagamentos_mes(
+        db, usuario_id, mes_num, hoje.year
+    )
     todos_pacientes, todos_pagamentos = dashboard_repository.buscar_todos_dados_usuario(db, usuario_id)
     
     total_recebido_mes = sum(p.valor for p in lancamentos_mes)
@@ -58,7 +63,8 @@ def gerar_relatorio_dashboard(db: Session, mes_nome: str, usuario_id: int):
                     "sessoes_pendentes": sessoes_devidas,
                     "valor_pendente": valor_devido_paciente
                 })
-        except:
+        except (TypeError, ValueError) as exc:
+            logger.warning("Paciente %s ignorado no dashboard: %s", p.id, exc)
             continue
 
     pacientes_devedores.sort(key=lambda x: x["valor_pendente"], reverse=True)

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, DateTime, Integer, String, Numeric, ForeignKey
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 from datetime import datetime
@@ -21,7 +21,7 @@ class Paciente(Base):
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String, index=True)
     cpf = Column(String, unique=False, nullable=True)
-    valor_sessao = Column(Float)
+    valor_sessao = Column(Numeric(12, 2))
     tipo_contrato = Column(String, default="Por Sessão")
     dia_vencimento = Column(Integer, nullable=True)
     status = Column(String, default="Ativo")
@@ -52,10 +52,11 @@ class Pagamento(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     pagador = Column(String)
-    valor = Column(Float)
-    data_hora = Column(String)
+    valor = Column(Numeric(12, 2))
+    data_hora = Column(DateTime(timezone=True))
     status = Column(String, default="Pago")
     id_transacao = Column(String, unique=True, index=True, nullable=True) 
+    idempotencia_chave = Column(String, unique=True, index=True, nullable=True)
     sessoes_pagas = Column(Integer, default=1)
     
     paciente_id = Column(Integer, ForeignKey("pacientes.id"), nullable=True) 

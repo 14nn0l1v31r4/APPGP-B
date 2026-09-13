@@ -65,3 +65,23 @@ def test_api_post_pagamento_manual_com_novo_paciente(client, db_session, test_us
     nomes = [p["nome"] for p in pacientes_resp.json()]
     assert "Roberto Carlos" in nomes
 
+def test_api_rejeita_sessoes_pagas_zero(client):
+    response = client.post(
+        "/pagamentos/rapido",
+        json={"paciente_id": 1, "sessoes_pagas": 0}
+    )
+
+    assert response.status_code == 422
+
+def test_api_rejeita_data_hora_invalida(client):
+    response = client.post(
+        "/pagamentos/",
+        json={
+            "pagador": "Data Inválida",
+            "valor": 100.0,
+            "data_hora": "data-invalida",
+            "sessoes_pagas": 1
+        }
+    )
+
+    assert response.status_code == 422

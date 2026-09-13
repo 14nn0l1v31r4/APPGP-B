@@ -1,4 +1,5 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from unittest.mock import patch
 from app.services import dashboard_service
 from app import models
@@ -28,9 +29,9 @@ def test_dashboard_mes_atual_corresponde_ao_mes_correto(db_session, test_user):
         pg = models.Pagamento(
             pagador="Paciente Teste",
             valor=250.0,
-            data_hora="10/09/2026 14:00",
+            data_hora=datetime(2026, 9, 10, 14, tzinfo=ZoneInfo("America/Sao_Paulo")),
             sessoes_pagas=2,
-            id_transacao="MANUAL",
+            id_transacao=None,
             usuario_id=test_user.id
         )
         db_session.add(pg)
@@ -45,3 +46,21 @@ def test_dashboard_mes_atual_corresponde_ao_mes_correto(db_session, test_user):
         assert relatorio["estatisticas"]["recebido"] == "250,00"
         assert relatorio["estatisticas"]["sessoesPagas"] == 2
 
+def test_dashboard_encontra_pagamento_em_formato_iso(db_session, test_user):
+    pg = models.Pagamento(
+        pagador="Paciente ISO",
+        valor=90.0,
+        data_hora=datetime(2026, 9, 13, 14, tzinfo=ZoneInfo("America/Sao_Paulo")),
+        sessoes_pagas=1,
+        usuario_id=test_user.id
+    )
+    db_session.add(pg)
+    db_session.commit()
+
+    relatorio = dashboard_service.gerar_relatorio_dashboard(
+        db=db_session,
+        mes_nome="Setembro",
+        usuario_id=test_user.id
+    )
+
+    assert relatorio["estatisticas"]["recebido"] == "90,00"
