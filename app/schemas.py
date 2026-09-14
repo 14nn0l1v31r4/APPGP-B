@@ -54,3 +54,53 @@ class Token(BaseModel):
 
 class SessaoDesmarcadaUpdate(BaseModel):
     data_sessao: str
+
+# Schemas de Importação em Lote e Revisão
+class ItemImportacaoResponse(BaseModel):
+    id: int
+    lote_id: int
+    nome_arquivo: str
+    content_type: str
+    hash_sha256: Optional[str] = None
+    banco: Optional[str] = None
+    pagador: Optional[str] = None
+    valor: Optional[Decimal] = None
+    data_hora: Optional[str] = None
+    id_transacao: Optional[str] = None
+    paciente_id: Optional[int] = None
+    sessoes_pagas: int = 1
+    valor_sessao_sugerido: Optional[Decimal] = None
+    dados_extraidos: Optional[dict] = None
+    status: str
+    etapa_erro: Optional[str] = None
+    mensagem_erro: Optional[str] = None
+    pagamento_id: Optional[int] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class LoteImportacaoResponse(BaseModel):
+    id: int
+    usuario_id: int
+    status: str
+    total: int
+    pendentes: int
+    aprovados: int
+    rejeitados: int
+    erros: int
+    itens: list[ItemImportacaoResponse]
+
+    model_config = ConfigDict(from_attributes=True)
+
+class ItemImportacaoUpdate(BaseModel):
+    pagador: Optional[str] = None
+    valor: Optional[Decimal] = Field(None, gt=0)
+    data_hora: Optional[str] = None
+    paciente_id: Optional[int] = None
+    sessoes_pagas: Optional[int] = Field(None, ge=1)
+    id_transacao: Optional[str] = None
+
+class AprovarSelecionadosRequest(BaseModel):
+    item_ids: list[int] = Field(..., min_length=1)
+
+class RejeitarItemRequest(BaseModel):
+    motivo: Optional[str] = None

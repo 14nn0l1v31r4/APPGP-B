@@ -5,14 +5,15 @@ from sqlalchemy.orm import Session
 from app.repositories import upload_repository
 from app.utils.parsers import extrair_os_dados
 
-def processar_arquivo_pix(db: Session, content: bytes, filename: str, content_type: str, valor_sessao_manual: float, usuario_id: int):
+def extrair_dados_comprovante(db: Session, content: bytes, filename: str, content_type: str, valor_sessao_manual: float = None, usuario_id: int = None):
     texto_extraido = ""
     
-    if filename.lower().endswith('.pdf') or content_type == 'application/pdf':
+    if (filename and filename.lower().endswith('.pdf')) or content_type == 'application/pdf':
         with pdfplumber.open(io.BytesIO(content)) as pdf:
             for page in pdf.pages:
                 texto_pagina = page.extract_text()
-                if texto_pagina: texto_extraido += texto_pagina + "\n"
+                if texto_pagina: 
+                    texto_extraido += texto_pagina + "\n"
     else:
         img = Image.open(io.BytesIO(content))
         texto_extraido = pytesseract.image_to_string(img, lang='por')
@@ -31,7 +32,7 @@ def processar_arquivo_pix(db: Session, content: bytes, filename: str, content_ty
     nome_lido = dados_extraidos.get("pagador", "").strip().upper()
     
     paciente_encontrado = None
-    if nome_lido and nome_lido != "NÃO IDENTIFICADO":
+    if db and usuario_id and nome_lido and nome_lido != "NÃO IDENTIFICADO":
         pacientes_cadastrados = upload_repository.buscar_pacientes_por_usuario(db, usuario_id)
         for p in pacientes_cadastrados:
             nome_db = p.nome.strip().upper()
@@ -47,10 +48,20 @@ def processar_arquivo_pix(db: Session, content: bytes, filename: str, content_ty
     else:
         valor_para_calculo = valor_sessao_manual
 
-    if valor_para_calculo and valor_para_calculo > 0:
+    if valor_para_calculo and float(valor_para_calculo) > 0:
         sessoes_calculadas = round(
             valor_pix / Decimal(str(valor_para_calculo))
         )
         dados_extraidos["sessoes_pagas"] = max(1, sessoes_calculadas)
 
     return dados_extraidos
+
+def processar_arquivo_pix(db: Session, content: bytes, filename: str, content_type: str, valor_sessao_manual: float, usuario_id: int):
+    return extrair_dados_comprovante(
+        db=db,
+        content=content,
+        filename=filename,
+        content_type=content_type,
+        valor_sessao_manual=valor_sessao_manual,
+        usuario_id=usuario_id
+    )

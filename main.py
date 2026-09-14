@@ -11,7 +11,8 @@ from app.controllers import (
     pacientes_controller,
     pagamentos_controller,
     dashboard_controller,
-    upload_controller
+    upload_controller,
+    importacao_controller
 )
 
 tesseract_cmd = os.getenv('TESSERACT_CMD', '/usr/bin/tesseract')
@@ -37,6 +38,7 @@ app.include_router(pacientes_controller.router)
 app.include_router(pagamentos_controller.router)
 app.include_router(dashboard_controller.router)
 app.include_router(upload_controller.router)
+app.include_router(importacao_controller.router)
 
 @app.get("/")
 def home():
