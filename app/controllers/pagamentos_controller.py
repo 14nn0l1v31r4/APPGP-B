@@ -8,6 +8,14 @@ from app.services import pagamentos_service
 
 router = APIRouter(prefix="/pagamentos", tags=["Pagamentos"])
 
+@router.post("/rapido")
+def registrar_pagamento_rapido(
+    dados: schemas.PagamentoRapidoCreate,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(security.get_current_user)
+):
+    return pagamentos_service.registrar_pagamento_rapido(db, dados, current_user.id)
+
 @router.post("/")
 def registrar_pagamento(pg: schemas.PagamentoCreate, db: Session = Depends(get_db), current_user: models.Usuario = Depends(security.get_current_user)):
     return pagamentos_service.processar_pagamento(db, pg, current_user.id)

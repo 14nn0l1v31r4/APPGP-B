@@ -85,6 +85,8 @@ def extrair_os_dados(arquivo):
             bloco_origem = texto_lower.split("origem")[-1]
             # O Regex ignora a palavra "nome" e captura até bater em "instituição" ou afins
             nome_m = re.search(r'^[\s:]*(?:nome\s+)?([a-zà-ÿ\s]+?)(?:\s+institui|\s+cpf|\s+cnpj|\]|\-|\d|$)', bloco_origem)
+            # O Regex ignora a palavra "nome" (com ou sem dois-pontos) e captura até bater em "instituição" ou afins
+            nome_m = re.search(r'^[\s:]*(?:nome[\s:]+)?([a-zà-ÿ\s]+?)(?:\s+institui|\s+cpf|\s+cnpj|\]|\-|\d|$)', bloco_origem)
             if nome_m:
                 dados["pagador"] = nome_m.group(1).replace(':', '').strip().upper()
         else:

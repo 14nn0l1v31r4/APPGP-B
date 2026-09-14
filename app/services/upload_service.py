@@ -1,4 +1,5 @@
 import io, pytesseract, pdfplumber
+from decimal import Decimal
 from PIL import Image
 from sqlalchemy.orm import Session
 from app.repositories import upload_repository
@@ -26,7 +27,7 @@ def processar_arquivo_pix(db: Session, content: bytes, filename: str, content_ty
     })
     
     valor_texto = dados_extraidos.get("valor", "0").replace(".", "").replace(",", ".")
-    valor_pix = float(valor_texto) if valor_texto else 0.0
+    valor_pix = Decimal(valor_texto) if valor_texto else Decimal("0")
     nome_lido = dados_extraidos.get("pagador", "").strip().upper()
     
     paciente_encontrado = None
@@ -47,7 +48,9 @@ def processar_arquivo_pix(db: Session, content: bytes, filename: str, content_ty
         valor_para_calculo = valor_sessao_manual
 
     if valor_para_calculo and valor_para_calculo > 0:
-        sessoes_calculadas = round(valor_pix / valor_para_calculo)
+        sessoes_calculadas = round(
+            valor_pix / Decimal(str(valor_para_calculo))
+        )
         dados_extraidos["sessoes_pagas"] = max(1, sessoes_calculadas)
 
     return dados_extraidos
